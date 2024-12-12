@@ -5,7 +5,7 @@ class SandboxException < StandardError; end;
 
 def assert_code_allowed(code, debug=false)
   begin
-    parser = Parser::Ruby32.new
+    parser = Parser::CurrentRuby.new
     parser.diagnostics.consumer = lambda do |diag|
       # Suppress parse errors
     end
@@ -18,9 +18,9 @@ def assert_code_allowed(code, debug=false)
   end
 end
 
-CODE_EVAL = [:eval, :load, :module_eval, :class_eval, :instance_eval, :require, :autoload]
+CODE_EVAL = [:eval, :load, :module_eval, :class_eval, :instance_eval, :require, :require_relative, :autoload]
 SYSTEM_CALL = [:open, :exec, :system, :spawn, :popen, :capture2, :pipeline_rw, :pipeline_r, :pipeline_w, :pipeline_start, :pipeline, :popen3, :popen2, :popen2e, :capture2e, :capture3]
-BYPASSES = [:alias_method, :method, :to_proc, :instance_method, :bind_call]
+BYPASSES = [:alias_method, :method, :to_proc, :instance_method, :bind_call, :irb, :syscall]
 
 def assert_node_allowed(expr, debug=false)
   return if expr.nil?

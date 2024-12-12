@@ -35,11 +35,12 @@ require "fiddle"; libc = Fiddle.dlopen("/lib/x86_64-linux-gnu/libc.so.6"); # ...
 File.write("./hack.rb", "puts open(\'|ls\').read()"); load "./hack.rb"
 File.write("./hack.rb", "puts open(\'|ls\').read()"); autoload :Foo, "./hack.rb"; Foo.new
 File.write("./hack.rb", "puts open(\'|ls\').read()"); require_relative "hack.rb"
-IO::Buffer.new(8) # mmap, ?, profit!
 Kernel.syscall(0) # syscall, ", profit!
+binding.irb # a fresh IRB session!
 '''.split("\n").reject { |line| line.strip.size == 0 }
 
-# Module.autoload
+# TODO: IO::Buffer.new(8) # mmap, ?, profit!
+
 REJECTION_CASES.each do |rejection_case|
   begin
     assert_code_allowed(rejection_case, debug=false)
