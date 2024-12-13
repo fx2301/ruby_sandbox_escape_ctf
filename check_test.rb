@@ -41,6 +41,7 @@ binding.pry # a fresh Pry session!
 Object.__send__(:open, "|ls")
 Marshal.restore(["magic hex"].pack("H*"))
 module Kernel; alias :foo :system; module_function :foo; end; Kernel.foo("ls")
+Pry.start
 '''.split("\n").reject { |line| line.strip.size == 0 }
 
 # TODO: IO::Buffer.new(8) # mmap, ?, profit!

@@ -18,13 +18,13 @@ def assert_code_allowed(code, debug=false)
   end
 end
 
-CODE_EVAL = [:eval, :load, :module_eval, :class_eval, :instance_eval, :require, :require_relative, :autoload, :restore]
+CODE_EVAL = [:eval, :load, :module_eval, :class_eval, :instance_eval, :require, :require_relative, :autoload, :restore, :start]
 SYSTEM_CALL = [:open, :exec, :system, :spawn, :popen, :capture2, :pipeline_rw, :pipeline_r, :pipeline_w, :pipeline_start, :pipeline, :popen3, :popen2, :popen2e, :capture2e, :capture3]
 BYPASSES = [:alias_method, :method, :to_proc, :instance_method, :bind_call, :irb, :syscall, :pry]
 
 ERROR_SYSTEM_COMMANDS = "System commands are not allowed. Use pure Ruby code instead."
 ERROR_META_PROGRAMMING = "Introspection and metaprogramming calls are limited. Use direct method calls instead."
-ERROR_DYNAMIC_METHOD_CALLS = "Dynamic method calling not allowed. Use a symbol for the method you need to call."
+ERROR_DYNAMIC_METHOD_CALLS = "Dynamic method callingThanks! I've patched the code to catch this. See if you can find another! not allowed. Use a symbol for the method you need to call."
 ERROR_CODE_EVALUATION = "Dynamic code evaluation not allowed. Use code that can be statically determined to be safe."
 
 def assert_node_allowed(expr, debug=false)
