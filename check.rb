@@ -18,9 +18,14 @@ def assert_code_allowed(code, debug=false)
   end
 end
 
-CODE_EVAL = [:eval, :load, :module_eval, :class_eval, :instance_eval, :require, :require_relative, :autoload]
+CODE_EVAL = [:eval, :load, :module_eval, :class_eval, :instance_eval, :require, :require_relative, :autoload, :restore]
 SYSTEM_CALL = [:open, :exec, :system, :spawn, :popen, :capture2, :pipeline_rw, :pipeline_r, :pipeline_w, :pipeline_start, :pipeline, :popen3, :popen2, :popen2e, :capture2e, :capture3]
-BYPASSES = [:alias_method, :method, :to_proc, :instance_method, :bind_call, :irb, :syscall]
+BYPASSES = [:alias_method, :method, :to_proc, :instance_method, :bind_call, :irb, :syscall, :pry]
+
+ERROR_SYSTEM_COMMANDS = "System commands are not allowed. Use pure Ruby code instead."
+ERROR_META_PROGRAMMING = "Introspection and metaprogramming calls are limited. Use direct method calls instead."
+ERROR_DYNAMIC_METHOD_CALLS = "Dynamic method calling not allowed. Use a symbol for the method you need to call."
+ERROR_CODE_EVALUATION = "Dynamic code evaluation not allowed. Use code that can be statically determined to be safe."
 
 def assert_node_allowed(expr, debug=false)
   return if expr.nil?
@@ -30,7 +35,9 @@ def assert_node_allowed(expr, debug=false)
   
   if expr.type == :xstr
     # Backticks are system calls
-    raise SandboxException.new "System commands are not allowed. Use pure Ruby code instead."
+    raise SandboxException.new ERROR_SYSTEM_COMMANDS
+  elsif expr.type == :alias
+    raise SandboxException.new ERROR_META_PROGRAMMING
   elsif expr.type == :send
     if concise.start_with?("(send (const nil :File) :open ")
       # Allow reads of hardcoded file names
@@ -65,15 +72,15 @@ end
 
 def assert_method_allowed(method_expr)
   if complex_expression?(method_expr)
-    raise SandboxException.new "Dynamic method calling not allowed. Use a symbol for the method you need to call."
+    raise SandboxException.new ERROR_DYNAMIC_METHOD_CALLS
   end
   method_simple = simplify_expression(method_expr)
   if CODE_EVAL.include?(method_simple)
-    raise SandboxException.new "Dynamic code evaluation not allowed. Use code that can be statically determined to be safe."
+    raise SandboxException.new ERROR_CODE_EVALUATION
   elsif SYSTEM_CALL.include?(method_simple)
-    raise SandboxException.new "System commands are not allowed. Use pure Ruby code instead."
+    raise SandboxException.new ERROR_SYSTEM_COMMANDS
   elsif BYPASSES.include?(method_simple)
-    raise SandboxException.new "Introspection and metaprogramming calls are limited. Use direct method calls instead."
+    raise SandboxException.new ERROR_META_PROGRAMMING
   end
 end
 
@@ -99,7 +106,7 @@ def simplify_expression(expr)
     raise "Cannot simplify: #{expr}"
   end
 
-  value = :send if value == :public_send
+  value = :send if value == :public_send || value == :__send__
 
   return value
 end

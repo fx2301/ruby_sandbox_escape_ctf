@@ -37,6 +37,10 @@ File.write("./hack.rb", "puts open(\'|ls\').read()"); autoload :Foo, "./hack.rb"
 File.write("./hack.rb", "puts open(\'|ls\').read()"); require_relative "hack.rb"
 Kernel.syscall(0) # syscall, ", profit!
 binding.irb # a fresh IRB session!
+binding.pry # a fresh Pry session!
+Object.__send__(:open, "|ls")
+Marshal.restore(["magic hex"].pack("H*"))
+module Kernel; alias :foo :system; module_function :foo; end; Kernel.foo("ls")
 '''.split("\n").reject { |line| line.strip.size == 0 }
 
 # TODO: IO::Buffer.new(8) # mmap, ?, profit!
