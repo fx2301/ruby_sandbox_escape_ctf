@@ -1,4 +1,7 @@
-Your mission is to successfully run a system command (e.g. `ls`) from within the console.
+Your mission is from within the console to:
+
+1. successfully run a system command (e.g. `system("ls")`), or
+2. successfully access the secret_key (e.g. `Rails.application.config.secret_key`). 
 
 To launch:
 

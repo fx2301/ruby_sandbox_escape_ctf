@@ -42,6 +42,10 @@ Object.__send__(:open, "|ls")
 Marshal.restore(["magic hex"].pack("H*"))
 module Kernel; alias :foo :system; module_function :foo; end; Kernel.foo("ls")
 Pry.start
+class Rails::Application::Configuration; public :method_missing; end; Rails.application.config.method_missing(:secret_key)
+Rails.application.config.class.class_variable_get(:@@options)[:secret_key]
+class Rails::Application::Configuration; def foo; @@options; end; end; Rails.application.config.foo[:secret_key]
+class Rails::Application::Configuration; def foo; method_missing(:secret_key); end; end; Rails.application.config.foo
 '''.split("\n").reject { |line| line.strip.size == 0 }
 
 # TODO: IO::Buffer.new(8) # mmap, ?, profit!

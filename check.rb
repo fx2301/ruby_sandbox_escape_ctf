@@ -1,5 +1,6 @@
 require 'parser/current'
 require 'json'
+require 'yaml'
 
 class SandboxException < StandardError; end;
 
@@ -20,12 +21,15 @@ end
 
 CODE_EVAL = [:eval, :load, :module_eval, :class_eval, :instance_eval, :require, :require_relative, :autoload, :restore, :start]
 SYSTEM_CALL = [:open, :exec, :system, :spawn, :popen, :capture2, :pipeline_rw, :pipeline_r, :pipeline_w, :pipeline_start, :pipeline, :popen3, :popen2, :popen2e, :capture2e, :capture3]
-BYPASSES = [:alias_method, :method, :to_proc, :instance_method, :bind_call, :irb, :syscall, :pry]
+BYPASSES = [:alias_method, :method, :to_proc, :instance_method, :bind_call, :irb, :syscall, :pry, :class_variable_get, :public, :method_missing]
+SECRET_CLASS_VARIABLES = [ :@@options ]
+SECRET_SYMBOLS = YAML.load(File.read("config/secrets.yml")).keys.map(&:to_sym)
 
 ERROR_SYSTEM_COMMANDS = "System commands are not allowed. Use pure Ruby code instead."
 ERROR_META_PROGRAMMING = "Introspection and metaprogramming calls are limited. Use direct method calls instead."
 ERROR_DYNAMIC_METHOD_CALLS = "Dynamic method callingThanks! I've patched the code to catch this. See if you can find another! not allowed. Use a symbol for the method you need to call."
 ERROR_CODE_EVALUATION = "Dynamic code evaluation not allowed. Use code that can be statically determined to be safe."
+ERROR_SECRET_ACCESS = "Accessing application secrets is not allowed. Use the provided access mechanisms instead."
 
 def assert_node_allowed(expr, debug=false)
   return if expr.nil?
@@ -33,9 +37,13 @@ def assert_node_allowed(expr, debug=false)
   concise = "#{expr}".gsub(/\s+/, ' ')
   puts(">> #{concise}") if debug
   
-  if expr.type == :xstr
+  if expr.type == :cvar
+    if SECRET_CLASS_VARIABLES.include?(expr.children[0])
+      raise SandboxException.new ERROR_SECRET_ACCESS
+    end
+  elsif expr.type == :xstr
     # Backticks are system calls
-    raise SandboxException.new ERROR_SYSTEM_COMMANDS
+    raise SandboxException.new ERROR_SECRET_ACCESS
   elsif expr.type == :alias
     raise SandboxException.new ERROR_META_PROGRAMMING
   elsif expr.type == :send
@@ -81,6 +89,8 @@ def assert_method_allowed(method_expr)
     raise SandboxException.new ERROR_SYSTEM_COMMANDS
   elsif BYPASSES.include?(method_simple)
     raise SandboxException.new ERROR_META_PROGRAMMING
+  elsif SECRET_SYMBOLS.include?(method_simple)
+    raise SandboxException.new ERROR_SECRET_ACCESS
   end
 end
 
