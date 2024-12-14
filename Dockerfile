@@ -8,4 +8,4 @@ RUN bundle install
 
 COPY . .
 
-CMD ["bundle", "exec", "ruby", "console.rb"]
+CMD ["bundle", "exec", "rails", "console"]
